@@ -15,7 +15,17 @@
     "strictNullChecks": false,
     "noImplicitAny": false,
     "strictBindCallApply": false,
+    "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@infra/*": ["src/modules/infra/*"],
+      "@core/*": ["src/modules/core/*"],
+      "@internal/*": ["src/modules/internal/*"],
+      "@external/*": ["src/modules/external/*"],
+      "@common/*": ["src/common/*"]
+    },
+    "types": ["@types/jest"]
+  },
+  "exclude": ["node_modules"]
 }
