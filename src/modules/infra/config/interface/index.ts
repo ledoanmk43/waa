@@ -1,1 +1,1 @@
-export * from './default-config.interface';
+export * from './default-config.interface'
