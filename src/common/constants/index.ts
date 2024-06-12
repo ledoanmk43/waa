@@ -1,3 +1,3 @@
-export * from './permission/user-permission.constant'
-export * from './permission/admin-permission.constant'
-export * from './permission/system-permission.constant'
+export * from './permissions/user-permission.constant'
+export * from './permissions/admin-permission.constant'
+export * from './permissions/system-permission.constant'
