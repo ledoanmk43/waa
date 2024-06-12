@@ -1,7 +1,7 @@
 import type { IDefaultConfig } from './interface'
 
 const initConfig = (): IDefaultConfig => ({
-  env: process.env.NODE_ENV ?? 'local',
+  env: process.env.NODE_ENV ?? 'development',
   port: parseInt(process.env.PORT ?? '3001', 10),
   org: process.env.ORG_NAME ?? 'waa',
   context: process.env.CONTEXT_NAME ?? 'waa',

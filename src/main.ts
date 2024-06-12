@@ -13,7 +13,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 import { description as pkDescription, name as pkName, version as pkVersion } from '../package.json'
 import { AppModule } from './app.module'
 
-const prefix = 'bkm/api'
+const prefix = 'waa/api'
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter(), {
     cors: true,

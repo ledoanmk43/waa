@@ -1,8 +1,8 @@
 {
   "name": "waa-app-be",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "version": "beta 0.0.1",
+  "description": "This is a restful API for WAA (Workaround Application) project",
+  "author": "Dane (Doan) Le",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
