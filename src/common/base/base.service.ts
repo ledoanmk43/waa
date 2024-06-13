@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { BaseRepository } from '@common/base/base.repository'
-import { DeepPartial, DeleteResult, FindManyOptions, FindOptionsWhere } from 'typeorm'
+import { DeepPartial, DeleteResult, FindManyOptions } from 'typeorm'
 import { BaseEntity } from './base.entity'
+import { TCustomOption } from '@common/types'
 
 @Injectable()
 export abstract class BaseService<T extends BaseEntity> {
@@ -11,7 +12,7 @@ export abstract class BaseService<T extends BaseEntity> {
     return await this.baseRepository.find(options)
   }
 
-  findOne(options: FindOptionsWhere<T> | FindOptionsWhere<T>[]): Promise<T | undefined> {
+  findOne(options: TCustomOption<T>): Promise<T | undefined> {
     return this.baseRepository.findOne(options)
   }
 

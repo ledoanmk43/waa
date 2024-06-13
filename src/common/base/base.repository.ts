@@ -1,4 +1,4 @@
-import { DeepPartial, DeleteResult, FindManyOptions, FindOptionsWhere, Repository } from 'typeorm'
+import { DeepPartial, DeleteResult, FindManyOptions, FindOneOptions, Repository } from 'typeorm'
 import { BaseEntity } from './base.entity'
 
 export abstract class BaseRepository<T extends BaseEntity> {
@@ -8,8 +8,8 @@ export abstract class BaseRepository<T extends BaseEntity> {
     return await this.baseRepository.find(options)
   }
 
-  findOne(options: FindOptionsWhere<T> | FindOptionsWhere<T>[]): Promise<T | undefined> {
-    return this.baseRepository.findOneBy(options)
+  findOne(options: FindOneOptions<T>): Promise<T | undefined> {
+    return this.baseRepository.findOne(options)
   }
 
   create(entity: DeepPartial<T>): T {
