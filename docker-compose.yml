@@ -26,6 +26,13 @@ services:
       - postgres
     restart: always
 
+  redis:
+    container_name: waa-redis
+    image: redis
+    restart: always
+    ports:
+      - '6379:6379'
+
   waa-app-be:
     build: .
     ports:

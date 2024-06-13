@@ -5,16 +5,21 @@ import { DynamicDatabaseModule } from '@infra/database/database.module'
 import { Module } from '@nestjs/common'
 import { DynamicLoggerModule } from '@infra/logger/logger.module'
 import { DynamicContextModule } from '@infra/context/context.module'
+import { UserModule } from '@core/user/user.module'
+import { DynamicCacheModule } from '@infra/cache/cache.module'
+import { cacheConfig } from '@infra/cache/cache.config'
 
 @Module({
   imports: [
     DynamicConfigModule.registerAsync({
       isGlobal: true,
-      load: [dbConfig, defaultConfig]
+      load: [defaultConfig, dbConfig, cacheConfig]
     }),
     DynamicContextModule.registerAsync(),
     DynamicLoggerModule.registerAsync(),
-    DynamicDatabaseModule.registerAsync()
+    DynamicDatabaseModule.registerAsync(),
+    DynamicCacheModule.registerAsync({ isGlobal: true }),
+    UserModule
   ],
   controllers: [],
   providers: []
