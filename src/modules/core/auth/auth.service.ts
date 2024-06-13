@@ -1,4 +1,3 @@
-// import { OAuthUser } from '@common/common.types'
 import { User } from '@core/user/entities'
 import { UserService, RoleService } from '@core/user/services'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
@@ -105,12 +104,14 @@ export class AuthService {
     try {
       // Create new user
       const user = await this.userService.addUser(userDto)
+
       // Get role
       const role = await this.roleService.searchRoleByCondition({
         where: { name: 'USER' },
         relations: ['users']
       })
       role.users.push(user)
+
       //Insert to junction table
       const savedRole = await this.roleService.addRole(role)
       // Return JWT if success
@@ -160,13 +161,9 @@ export class AuthService {
     return response
   }
 
-  async checkIsValidSessionToken(idToken: string): Promise<boolean> {
-    const redisData = await this.cacheManager.get(idToken)
-    if (redisData) {
-      return true
-    } else {
-      return false
-    }
+  async checkIsValidSessionToken(tokenId: string): Promise<boolean> {
+    const redisData = await this.cacheManager.get(tokenId)
+    return !!redisData
   }
 
   async addAccessTokenBlackList(accessToken: string, userId: string) {

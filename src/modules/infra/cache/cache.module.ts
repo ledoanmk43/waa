@@ -1,4 +1,4 @@
-import { CacheModule as NestJsCacheModule } from '@nestjs/cache-manager'
+import { CacheModule } from '@nestjs/cache-manager'
 import { Module } from '@nestjs/common'
 import { ConfigService } from '@infra/config/config.service'
 import { redisStore } from 'cache-manager-redis-yet'
@@ -15,7 +15,7 @@ export class DynamicCacheModule {
     return {
       module: DynamicCacheModule,
       imports: [
-        NestJsCacheModule.registerAsync<RedisClientOptions>({
+        CacheModule.registerAsync<RedisClientOptions>({
           useFactory: (configService: ConfigService) => {
             const config = configService.get<ICacheConfig>('cache')
             return {

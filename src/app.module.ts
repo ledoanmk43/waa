@@ -8,6 +8,7 @@ import { DynamicContextModule } from '@infra/context/context.module'
 import { UserModule } from '@core/user/user.module'
 import { DynamicCacheModule } from '@infra/cache/cache.module'
 import { cacheConfig } from '@infra/cache/cache.config'
+import { AuthModule } from '@core/auth/auth.module'
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { cacheConfig } from '@infra/cache/cache.config'
     DynamicLoggerModule.registerAsync(),
     DynamicDatabaseModule.registerAsync(),
     DynamicCacheModule.registerAsync({ isGlobal: true }),
-    UserModule
+    UserModule,
+    AuthModule
   ],
   controllers: [],
   providers: []

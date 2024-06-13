@@ -3,4 +3,5 @@ export interface IJwtPayload {
   email?: string
   roleIds?: string[]
   accessToken?: string
+  refreshToken?: string
 }
