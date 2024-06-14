@@ -1,6 +1,6 @@
 import { BaseEntity } from '@common/base'
 import { ApiProperty } from '@nestjs/swagger'
-import { Expose } from 'class-transformer'
+import { Exclude } from 'class-transformer'
 import * as bcrypt from 'bcrypt'
 import { IsEmail, IsNotEmpty } from 'class-validator'
 import { BeforeInsert, BeforeUpdate, Column, Entity, JoinTable, ManyToMany } from 'typeorm'
@@ -17,32 +17,28 @@ export class User extends BaseEntity {
   @Column({ name: 'EMAIL', unique: true, length: 255 })
   @IsEmail()
   @IsNotEmpty()
-  @Expose()
   email: string
 
   @ApiProperty()
   @Column({ name: 'PASSWORD', length: 255 })
   @IsNotEmpty()
+  @Exclude()
   password: string
 
   @ApiProperty()
   @Column({ name: 'IS_PENDING', type: 'boolean', default: true })
-  @Expose()
   isPending?: boolean
 
   @ApiProperty()
   @Column({ name: 'IS_DISABLE', type: 'boolean', default: false })
-  @Expose()
   isDisable?: boolean
 
   @ApiProperty()
   @Column({ name: 'FIRSTNAME', length: 255 })
-  @Expose()
   firstName: string
 
   @ApiProperty()
   @Column({ name: 'LASTNAME', length: 255 })
-  @Expose()
   lastName: string
 
   @ApiProperty()
@@ -72,7 +68,6 @@ export class User extends BaseEntity {
       referencedColumnName: 'id'
     }
   })
-  @Expose()
   roles: Role[]
 
   @BeforeInsert()

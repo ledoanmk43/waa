@@ -1,8 +1,9 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
-import { Inject } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { ETimeUnit } from '@common/enums'
 import { Cache } from 'cache-manager'
 
+@Injectable()
 export class CacheService {
   constructor(@Inject(CACHE_MANAGER) private readonly _cacheManager: Cache) {}
 

@@ -18,8 +18,8 @@ import { AuthModule } from '@core/auth/auth.module'
     }),
     DynamicContextModule.registerAsync(),
     DynamicLoggerModule.registerAsync(),
-    DynamicDatabaseModule.registerAsync(),
     DynamicCacheModule.registerAsync({ isGlobal: true }),
+    DynamicDatabaseModule.registerAsync(),
     UserModule,
     AuthModule
   ],

@@ -18,8 +18,8 @@ export class SeedingUserRolePermissionTable1718173230506 implements MigrationInt
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Seeding the root user
     await queryRunner.query(`INSERT INTO users(
-      id, "CRE_DT", "UPD_DT", "CRE_BY", "UPD_BY", "EMAIL", "PASSWORD", "FIRSTNAME", "LASTNAME")
-      VALUES ('${SeedRootId}', now(), now(), '${SeedRootId}', '${SeedRootId}',  '${SeedRootEmail}', '${SeedRootPassword}', '${SeedRootFirstName}', '${SeedRootLastName}');`)
+      id, "CRE_DT", "UPD_DT", "CRE_BY", "UPD_BY", "EMAIL", "PASSWORD", "FIRSTNAME", "LASTNAME", "IS_PENDING")
+      VALUES ('${SeedRootId}', now(), now(), '${SeedRootId}', '${SeedRootId}',  '${SeedRootEmail}', '${SeedRootPassword}', '${SeedRootFirstName}', '${SeedRootLastName}', false);`)
 
     // Seeding the roles table
     await queryRunner.query(

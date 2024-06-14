@@ -1,21 +1,17 @@
-import { Expose } from 'class-transformer'
+import { ApiProperty } from '@nestjs/swagger'
 
 export class AuthResponseDto {
-  @Expose()
+  @ApiProperty()
   accessToken: string
 
-  @Expose()
-  refreshToken: string
-
-  idToken?: string
+  @ApiProperty()
+  refreshToken?: string
 }
 
 export class SendEmailResetPwResponseDto {
-  @Expose()
   message: string
 }
 
 export class ValidRedisDTO {
-  @Expose()
   isValid: boolean
 }

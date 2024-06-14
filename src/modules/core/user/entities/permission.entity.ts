@@ -1,6 +1,6 @@
 import { BaseEntity } from '@common/base'
 import { ApiProperty } from '@nestjs/swagger'
-import { Expose } from 'class-transformer'
+import { Exclude } from 'class-transformer'
 import { Column, Entity, ManyToMany } from 'typeorm'
 import { IsUppercase } from 'class-validator'
 import { Role } from './role.entity'
@@ -14,21 +14,19 @@ export class Permission extends BaseEntity {
 
   @ApiProperty()
   @Column({ name: 'NAME', unique: true, length: 255 })
-  @Expose()
   @IsUppercase()
   name: string
 
   @ApiProperty()
   @Column({ name: 'DESCRIPTION', length: 255 })
-  @Expose()
   description: string
 
   @ApiProperty()
   @Column({ name: 'DEL_DT', nullable: true })
+  @Exclude()
   deletedAt?: Date
 
   @ApiProperty()
-  @Expose()
   @ManyToMany(() => Role, (role) => role.permissions)
   roles: Role[]
 }

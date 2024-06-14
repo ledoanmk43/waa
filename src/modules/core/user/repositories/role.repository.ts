@@ -4,8 +4,8 @@ import { Repository } from 'typeorm'
 import { Role } from '../entities'
 
 export class RoleRepository extends BaseRepository<Role> {
-  constructor(@InjectRepository(Role) private readonly repository: Repository<Role>) {
-    super(repository)
+  constructor(@InjectRepository(Role) private readonly _repository: Repository<Role>) {
+    super(_repository)
   }
 
   //TODO: Implement Role repository methods

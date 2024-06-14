@@ -1,29 +1,22 @@
 import { User } from '@core/user/entities'
 import { UserService, RoleService } from '@core/user/services'
-import { CACHE_MANAGER } from '@nestjs/cache-manager'
-import {
-  BadRequestException,
-  HttpException,
-  HttpStatus,
-  Inject,
-  Injectable,
-  Logger
-} from '@nestjs/common'
-import { JwtService } from '@nestjs/jwt'
+import { BadRequestException, HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common'
+import { JwtService, JwtSignOptions } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
-import { Cache } from 'cache-manager'
 import { AuthResponseDto, SignInDto, SignUpDto } from './dtos'
-import { IJwtPayload } from './strategies'
-import { EUserMessage } from '@common/enums'
+import { TJwtPayload } from './types'
+import { ECommonMessage, ETimeUnit, EUserMessage } from '@common/enums'
+import { CacheService } from '@infra/cache/cache.service'
+import { ConfigService } from '@infra/config/config.service'
 
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-
-    private readonly userService: UserService,
-    private readonly roleService: RoleService,
-    private readonly jwtService: JwtService
+    private readonly _cacheService: CacheService,
+    private readonly _userService: UserService,
+    private readonly _roleService: RoleService,
+    private readonly _jwtService: JwtService,
+    private readonly _configService: ConfigService
   ) {}
 
   //   async googleLogin(userDto: OAuthUser): Promise<AuthResponseDto> {
@@ -99,23 +92,26 @@ export class AuthService {
   //   }
 
   // Register new user
-
-  async registerUser(userDto: SignUpDto): Promise<AuthResponseDto> {
+  async SignUpUser(userDto: SignUpDto): Promise<AuthResponseDto> {
     try {
       // Create new user
-      const user = await this.userService.addUser(userDto)
+      const user = await this._userService.addUser(userDto)
 
       // Get role
-      const role = await this.roleService.searchRoleByCondition({
+      const role = await this._roleService.searchRoleByCondition({
         where: { name: 'USER' },
         relations: ['users']
       })
       role.users.push(user)
 
       //Insert to junction table
-      const savedRole = await this.roleService.addRole(role)
-      // Return JWT if success
-      return this.generateAccessToken(user, [savedRole.id])
+      const savedRole = await this._roleService.addRole(role)
+
+      // Return JWT access + refresh tokens when succeed
+      return {
+        accessToken: this.generateJwtAccessTokens(user, [savedRole.id]),
+        refreshToken: this.generateJwtRefreshTokens(user, [savedRole.id])
+      }
     } catch (error) {
       Logger.error(error.message)
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
@@ -123,16 +119,18 @@ export class AuthService {
   }
 
   // Authenticate user
-  async loginUser(userDto: SignInDto): Promise<AuthResponseDto> {
+  async SignInUser(userDto: SignInDto): Promise<AuthResponseDto> {
     try {
       // Find user by email
-      const user = await this.userService.searchUserByCondition({
+      const user = await this._userService.searchUserByCondition({
         where: { email: userDto.email },
         relations: ['roles']
       })
+
       if (!user) {
         throw new Error(EUserMessage.WRONG_USERNAME)
       }
+
       // Verify password
       const isVerified = await bcrypt.compare(userDto.password, user.password)
       if (!isVerified) {
@@ -143,38 +141,88 @@ export class AuthService {
         return role.id
       })
 
-      // Return JWT when succeed
-      return this.generateAccessToken(user, roleIdList)
+      // Return JWT access + refresh tokens when succeed
+      return {
+        accessToken: this.generateJwtAccessTokens(user, roleIdList),
+        refreshToken: this.generateJwtRefreshTokens(user, roleIdList)
+      }
     } catch (error) {
       Logger.error(error.message)
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
     }
   }
 
-  generateAccessToken(user: User, roleIdList: string[]): AuthResponseDto {
-    const response = new AuthResponseDto()
-    response.accessToken = this.jwtService.sign({
+  // Refresh token
+  async refreshToken({ id, email }: TJwtPayload): Promise<AuthResponseDto> {
+    try {
+      const user = await this._userService.searchUserByCondition({
+        where: { id, email },
+        relations: ['roles']
+      })
+
+      if (!user) {
+        throw new Error(EUserMessage.WRONG_USERNAME)
+      }
+
+      const roleIdList = user.roles.map((role) => {
+        return role.id
+      })
+
+      // Return new JWT access + refresh tokens when succeed
+      return {
+        accessToken: this.generateJwtAccessTokens(user, roleIdList),
+        refreshToken: this.generateJwtRefreshTokens(user, roleIdList)
+      }
+    } catch (error) {
+      Logger.error(error.message)
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
+    }
+  }
+
+  generateJwtAccessTokens(user: User, roleIdList: string[]): string {
+    const payload: TJwtPayload = {
       id: user.id,
       email: user.email,
       roleIds: roleIdList
-    } as IJwtPayload)
-    return response
+    }
+
+    const jwtOptions: JwtSignOptions = {
+      secret: this._configService.get<string>('AC_JWT_SECRET'),
+      expiresIn: ETimeUnit.QUARTER_HOUR_IN_SECONDS
+    }
+
+    return this._jwtService.sign(payload, jwtOptions)
+  }
+
+  generateJwtRefreshTokens(user: User, roleIdList: string[]): string {
+    const payload: TJwtPayload = {
+      id: user.id,
+      email: user.email,
+      roleIds: roleIdList
+    }
+
+    const jwtOptions: JwtSignOptions = {
+      secret: this._configService.get<string>('RF_JWT_SECRET'),
+      expiresIn: ETimeUnit.WEEK_HOUR_IN_SECONDS
+    }
+
+    return this._jwtService.sign(payload, jwtOptions)
   }
 
   async checkIsValidSessionToken(tokenId: string): Promise<boolean> {
-    const redisData = await this.cacheManager.get(tokenId)
+    const redisData = await this._cacheService.get(tokenId)
     return !!redisData
   }
 
   async addAccessTokenBlackList(accessToken: string, userId: string) {
     try {
-      const payloadFromToken: any = this.jwtService.verify(accessToken)
+      const payloadFromToken: any = this._jwtService.verify(accessToken)
       const currentTime = Math.floor(Date.now() / 1000)
       const ttl: number = (payloadFromToken.exp - currentTime) * 1000 // the remaining time of the token is also the time it will be in blacklist
       if (ttl > 0) {
-        await this.cacheManager.set(accessToken, userId, ttl)
+        await this._cacheService.set(accessToken, userId, ttl)
       } else {
-        throw new HttpException('Token has expired', HttpStatus.BAD_REQUEST)
+        throw new HttpException(ECommonMessage.TOKEN_EXPIRED, HttpStatus.BAD_REQUEST)
       }
     } catch (error) {
       Logger.error(error.message)

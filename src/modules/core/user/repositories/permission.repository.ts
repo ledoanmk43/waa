@@ -4,8 +4,8 @@ import { Repository } from 'typeorm'
 import { Permission } from '../entities'
 
 export class PermissionRepository extends BaseRepository<Permission> {
-  constructor(@InjectRepository(Permission) private readonly repository: Repository<Permission>) {
-    super(repository)
+  constructor(@InjectRepository(Permission) private readonly _repository: Repository<Permission>) {
+    super(_repository)
   }
 
   //TODO: Implement Permission repository methods

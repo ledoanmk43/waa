@@ -8,6 +8,7 @@ export class InitRoleTable1718171964616 implements MigrationInterface {
              id uuid NOT NULL,
             "CRE_DT" timestamp without time zone NOT NULL DEFAULT now(),
             "UPD_DT" timestamp without time zone NOT NULL DEFAULT now(),
+            "DEL_DT" timestamp without time zone,
             "CRE_BY" uuid NOT NULL,
             "UPD_BY" uuid NOT NULL,
             "NAME" character varying(255) COLLATE pg_catalog."default" NOT NULL,

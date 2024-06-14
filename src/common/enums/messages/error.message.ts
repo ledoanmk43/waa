@@ -2,7 +2,8 @@ export enum ECommonMessage {
   FORBIDDEN = 'Forbidden',
   FAIL_TO_CREATE = 'Fail to create',
   FAIL_TO_UPDATE = 'Fail to update',
-  FAIL_TO_DELETE = 'Fail to delete'
+  FAIL_TO_DELETE = 'Fail to delete',
+  TOKEN_EXPIRED = 'Token expired'
 }
 
 export enum EUserMessage {

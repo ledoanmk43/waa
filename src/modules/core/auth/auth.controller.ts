@@ -1,17 +1,12 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common'
-import { Request } from 'express'
-import { JwtAuthenticationGuard } from './guards'
+import { Body, Controller, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common'
+import { JwtAccessGuard, JwtRefreshGuard } from './guards'
 import { AuthService } from './auth.service'
 import { AuthResponseDto, RedisTokenDto, SignInDto, SignUpDto } from './dtos'
-import { AuthReq } from './types'
-import { ConfigService } from '@nestjs/config'
+import { TCustomRequest } from './types'
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly configService: ConfigService
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   //   @UseGuards(GoogleOauthGuard)
   //   @Get('google')
@@ -28,27 +23,37 @@ export class AuthController {
   //     }
   //   }
 
+  @HttpCode(HttpStatus.OK)
+  @Post('sign-up')
+  async register(@Body() dto: SignUpDto): Promise<AuthResponseDto> {
+    return await this.authService.SignUpUser(dto)
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('sign-in')
+  async login(@Body() dto: SignInDto): Promise<AuthResponseDto> {
+    return await this.authService.SignInUser(dto)
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtRefreshGuard)
+  @Post('refresh-token')
+  async refreshToken(@Req() { user }: TCustomRequest): Promise<AuthResponseDto> {
+    return await this.authService.refreshToken(user)
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAccessGuard)
+  @Post('sign-out')
+  async getUserLogout(@Req() { user }: TCustomRequest) {
+    await this.authService.addAccessTokenBlackList(user.accessToken, user.id)
+  }
+
+  @HttpCode(HttpStatus.OK)
   @Post('redis-session-expiration')
   async checkIsValidSessionToken(@Body() { tokenId }: RedisTokenDto): Promise<string> {
     const isValidToken = await this.authService.checkIsValidSessionToken(tokenId)
 
     return isValidToken ? tokenId : ''
-  }
-
-  @Post('sign-up')
-  register(@Body() body: SignUpDto): Promise<AuthResponseDto> {
-    return this.authService.registerUser(body)
-  }
-
-  @Post('sign-in')
-  login(@Body() body: SignInDto, @Req() request: Request): Promise<AuthResponseDto> {
-    console.log(request)
-    return this.authService.loginUser(body)
-  }
-
-  @UseGuards(JwtAuthenticationGuard)
-  @Post('sign-out')
-  async getUserLogout(@Req() request: AuthReq) {
-    await this.authService.addAccessTokenBlackList(request.user.accessToken, request.user.id)
   }
 }

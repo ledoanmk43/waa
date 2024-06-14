@@ -1,6 +1,6 @@
 import { BaseEntity } from '@common/base'
 import { ApiProperty } from '@nestjs/swagger'
-import { Expose } from 'class-transformer'
+import { Exclude } from 'class-transformer'
 import { Column, Entity, JoinTable, ManyToMany } from 'typeorm'
 import { User } from './user.entity'
 import { Permission } from './permission.entity'
@@ -14,11 +14,11 @@ export class Role extends BaseEntity {
 
   @ApiProperty()
   @Column({ name: 'NAME', unique: true, length: 255 })
-  @Expose()
   name: string
 
   @ApiProperty()
   @Column({ name: 'DEL_DT', nullable: true })
+  @Exclude()
   deletedAt?: Date
 
   @ApiProperty()
@@ -36,7 +36,6 @@ export class Role extends BaseEntity {
       referencedColumnName: 'id'
     }
   })
-  @Expose()
   permissions: Permission[]
 
   @ApiProperty()

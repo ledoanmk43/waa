@@ -1,38 +1,44 @@
 import { UserService } from '@core/user/services'
-import { CACHE_MANAGER } from '@nestjs/cache-manager'
-import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common'
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common'
 import { PassportStrategy } from '@nestjs/passport'
-import { Cache } from 'cache-manager'
 import { Request } from 'express'
 import { ExtractJwt, Strategy } from 'passport-jwt'
-import { IJwtPayload } from './interface'
+
+import { CacheService } from '@infra/cache/cache.service'
+import { ConfigService } from '@infra/config/config.service'
+import { JWT_REFRESH_GUARD } from '@core/auth/constants'
+import { TJwtPayload } from '@core/auth/types'
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class JwtRefreshStrategy extends PassportStrategy(Strategy, JWT_REFRESH_GUARD) {
   constructor(
-    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-    private readonly userService: UserService
+    private readonly _cacheService: CacheService,
+    private readonly _userService: UserService,
+    private readonly configService: ConfigService
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: process.env.JWT_SECRET,
+      secretOrKey: configService.get<string>('RF_JWT_SECRET'),
       passReqToCallback: true
     })
   }
 
-  async validate(req: Request, payload: IJwtPayload): Promise<IJwtPayload> {
+  async validate(req: Request, payload: TJwtPayload): Promise<TJwtPayload> {
     const { id, email } = payload
     try {
       // Set access token from header Authorization
-      payload.accessToken = req.headers.authorization.split(' ')[1]
+      payload.refreshToken = req.headers.authorization.split(' ')[1]
+
       // Then check it in redis cache
-      const redisData = await this.cacheManager.get(payload.accessToken)
+      const redisData = await this._cacheService.get(payload.refreshToken)
+
       // If it exists means that token is unexpired but user still log out then block request with that token
       if (redisData) {
         throw new UnauthorizedException()
       }
+
       // Else
-      const user = await this.userService.searchUserByCondition({
+      const user = await this._userService.searchUserByCondition({
         where: { id: id, email: email }
       })
 

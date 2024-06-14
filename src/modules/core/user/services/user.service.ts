@@ -12,19 +12,19 @@ import { FindOneOptions } from 'typeorm'
 @Injectable()
 export class UserService extends BaseService<User> {
   constructor(
-    @Inject(LOGGER_KEY) private logger: ILogger,
-    private readonly repository: UserRepository
+    @Inject(LOGGER_KEY) private _logger: ILogger,
+    private readonly _repository: UserRepository
   ) {
-    super(repository)
+    super(_repository)
   }
   async addUser(userDto: SignUpDto): Promise<User> {
     try {
-      const newUser = this.repository.create(userDto)
-      const user = await this.repository.save(newUser)
+      const newUser = this._repository.create(userDto)
+      const user = await this._repository.save(newUser)
 
       return user
     } catch (error) {
-      this.logger.error(error.message)
+      this._logger.error(error.message)
       if (error.message.includes('duplicate key')) {
         throw new HttpException(EUserMessage.ALREADY_EXISTS_EMAIL, HttpStatus.CONFLICT)
       }
@@ -34,20 +34,21 @@ export class UserService extends BaseService<User> {
 
   async searchUserByCondition(condition: FindOneOptions<User>): Promise<User> {
     try {
-      const user = await this.repository.findOne(condition)
+      const user = await this._repository.findOne(condition)
+
       return user
     } catch (error) {
-      this.logger.error(error.message)
+      this._logger.error(error.message)
       throw new HttpException(error.message, HttpStatus.NOT_FOUND)
     }
   }
 
   async searchUserById(id: string): Promise<User> {
     try {
-      const user = await this.repository.findOne({ where: { id } })
+      const user = await this._repository.findOne({ where: { id } })
       return user
     } catch (error) {
-      this.logger.error(error.message)
+      this._logger.error(error.message)
       throw new HttpException(error.message, HttpStatus.NOT_FOUND)
     }
   }
@@ -136,7 +137,7 @@ export class UserService extends BaseService<User> {
 
   async getAllUsers(): Promise<User[]> {
     try {
-      const users = await this.repository.find({
+      const users = await this._repository.find({
         order: {
           createdDate: 'ASC'
         }
@@ -148,7 +149,7 @@ export class UserService extends BaseService<User> {
 
       return users
     } catch (error) {
-      this.logger.error(error.message)
+      this._logger.error(error.message)
       throw new HttpException(error.message, HttpStatus.NOT_FOUND)
     }
   }

@@ -12,12 +12,18 @@ import type { RedisClientOptions } from 'redis'
 export class DynamicCacheModule {
   static registerAsync(options?: IDynamicCacheModuleOptions): DynamicModule {
     const { isGlobal } = options ?? { isGlobal: false }
+
     return {
       module: DynamicCacheModule,
       imports: [
         CacheModule.registerAsync<RedisClientOptions>({
           useFactory: (configService: ConfigService) => {
             const config = configService.get<ICacheConfig>('cache')
+
+            if (!config) {
+              throw new Error('Cache configuration is not set')
+            }
+
             return {
               store: redisStore,
               url: `redis://${config.host}:${config.port}`

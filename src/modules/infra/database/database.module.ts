@@ -16,6 +16,11 @@ export class DynamicDatabaseModule {
         TypeOrmModule.forRootAsync({
           useFactory: (configService: ConfigService) => {
             const config = configService.get<IDatabaseConfig>('db')
+
+            if (!config) {
+              throw new Error('Database configuration is not set')
+            }
+
             return {
               type: 'postgres',
               ...config

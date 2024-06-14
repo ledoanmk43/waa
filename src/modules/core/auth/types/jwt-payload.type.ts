@@ -1,4 +1,4 @@
-export interface IJwtPayload {
+export type TJwtPayload = {
   id?: string
   email?: string
   roleIds?: string[]

@@ -8,10 +8,10 @@ import { PermissionRepository } from '../repositories'
 @Injectable()
 export class PermissionService extends BaseService<Permission> {
   constructor(
-    @Inject(LOGGER_KEY) private logger: ILogger,
-    private readonly repository: PermissionRepository
+    @Inject(LOGGER_KEY) private _logger: ILogger,
+    private readonly _repository: PermissionRepository
   ) {
-    super(repository)
+    super(_repository)
   }
   //TODO: Implement Permission service methods
 }
