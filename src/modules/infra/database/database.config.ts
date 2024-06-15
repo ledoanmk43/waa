@@ -11,6 +11,7 @@ const initConfig = (): IDatabaseConfig => ({
   autoLoadEntities: true,
   keepConnectionAlive: true,
   entities: [resolve(__dirname, '**/*.entity.ts')],
+  subscribers: [resolve(__dirname, '**/*.subscriber.ts')],
   namingStrategy: new NamingStrategy(),
   timezone: 'Z',
   logging: process.env.DB_LOGGING === 'true'

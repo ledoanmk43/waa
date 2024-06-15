@@ -25,11 +25,11 @@ export abstract class BaseEntity {
   updatedDate?: Date
 
   @ApiProperty()
-  @Column({ name: 'CRE_BY', nullable: false, default: 'system' })
+  @Column({ name: 'CRE_BY', default: 'system' })
   createdBy?: string
 
   @ApiProperty()
-  @Column({ name: 'UPD_BY', nullable: true, default: 'system' })
+  @Column({ name: 'UPD_BY', default: 'system' })
   updatedBy?: string
 
   @BeforeInsert()

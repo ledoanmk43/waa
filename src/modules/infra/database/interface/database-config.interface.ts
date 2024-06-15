@@ -7,6 +7,7 @@ export interface IDatabaseConfig {
   password: string
   database: string
   entities: string[]
+  subscribers: string[]
   namingStrategy: NamingStrategyInterface
   autoLoadEntities: boolean
   keepConnectionAlive: boolean

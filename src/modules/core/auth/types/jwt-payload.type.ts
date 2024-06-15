@@ -4,4 +4,6 @@ export type TJwtPayload = {
   roleIds?: string[]
   accessToken?: string
   refreshToken?: string
+  iat?: number
+  exp?: number
 }

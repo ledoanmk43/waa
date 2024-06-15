@@ -1,10 +1,21 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Req,
+  UseGuards,
+  UsePipes,
+  ValidationPipe
+} from '@nestjs/common'
 import { JwtAccessGuard, JwtRefreshGuard } from './guards'
 import { AuthService } from './auth.service'
-import { AuthResponseDto, RedisTokenDto, SignInDto, SignUpDto } from './dtos'
+import { AuthResponseDto, RedisTokenDto, SignInDto, SignOutDto, SignUpDto } from './dtos'
 import { TCustomRequest } from './types'
 
 @Controller('auth')
+@UsePipes(new ValidationPipe({ transform: true }))
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -25,14 +36,14 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('sign-up')
-  async register(@Body() dto: SignUpDto): Promise<AuthResponseDto> {
-    return await this.authService.SignUpUser(dto)
+  async signUp(@Body() dto: SignUpDto): Promise<AuthResponseDto> {
+    return await this.authService.signUpUser(dto)
   }
 
   @HttpCode(HttpStatus.OK)
   @Post('sign-in')
-  async login(@Body() dto: SignInDto): Promise<AuthResponseDto> {
-    return await this.authService.SignInUser(dto)
+  async signIn(@Body() dto: SignInDto): Promise<AuthResponseDto> {
+    return await this.authService.signInUser(dto)
   }
 
   @HttpCode(HttpStatus.OK)
@@ -42,11 +53,14 @@ export class AuthController {
     return await this.authService.refreshToken(user)
   }
 
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(JwtAccessGuard)
   @Post('sign-out')
-  async getUserLogout(@Req() { user }: TCustomRequest) {
-    await this.authService.addAccessTokenBlackList(user.accessToken, user.id)
+  async signOut(
+    @Req() { user }: TCustomRequest,
+    @Body() { refreshToken }: SignOutDto
+  ): Promise<void> {
+    await this.authService.signOutUser(user.accessToken, refreshToken)
   }
 
   @HttpCode(HttpStatus.OK)

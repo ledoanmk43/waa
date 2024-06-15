@@ -1,20 +1,19 @@
 import { UserService } from '@core/user/services'
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common'
+import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { PassportStrategy } from '@nestjs/passport'
-import { Request } from 'express'
 import { ExtractJwt, Strategy } from 'passport-jwt'
-
-import { CacheService } from '@infra/cache/cache.service'
 import { ConfigService } from '@infra/config/config.service'
 import { JWT_REFRESH_GUARD } from '@core/auth/constants'
 import { TJwtPayload } from '@core/auth/types'
+import { FastifyRequest } from 'fastify'
+import { AuthRepository } from '@core/auth/auth.repository'
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(Strategy, JWT_REFRESH_GUARD) {
   constructor(
-    private readonly _cacheService: CacheService,
     private readonly _userService: UserService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly _repository: AuthRepository
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -23,32 +22,26 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, JWT_REFRESH_G
     })
   }
 
-  async validate(req: Request, payload: TJwtPayload): Promise<TJwtPayload> {
-    const { id, email } = payload
-    try {
-      // Set access token from header Authorization
-      payload.refreshToken = req.headers.authorization.split(' ')[1]
+  async validate(req: FastifyRequest, payload: TJwtPayload): Promise<TJwtPayload> {
+    // Set refresh token from header Authorization
+    payload.refreshToken = req.headers.authorization.split(' ')[1]
 
-      // Then check it in redis cache
-      const redisData = await this._cacheService.get(payload.refreshToken)
-
-      // If it exists means that token is unexpired but user still log out then block request with that token
-      if (redisData) {
-        throw new UnauthorizedException()
-      }
-
-      // Else
-      const user = await this._userService.searchUserByCondition({
-        where: { id: id, email: email }
-      })
-
-      if (!user) {
-        throw new UnauthorizedException()
-      }
-    } catch (error) {
-      Logger.error(error.message)
-      throw new UnauthorizedException(error.message)
+    // Then check it in postgres blacklist
+    const token = await this._repository.findOne({ where: { token: payload.refreshToken } })
+    if (token) {
+      throw new UnauthorizedException()
     }
+
+    // Else
+    const { id, email } = payload
+    const user = await this._userService.searchUserByCondition({
+      where: { id: id, email: email }
+    })
+
+    if (!user) {
+      throw new UnauthorizedException()
+    }
+
     // Finally
     return payload
   }

@@ -29,3 +29,9 @@ export class SignUpDto extends SignInDto {
 
   role: Role
 }
+
+export class SignOutDto {
+  @ApiProperty()
+  @IsNotEmpty()
+  refreshToken: string
+}
