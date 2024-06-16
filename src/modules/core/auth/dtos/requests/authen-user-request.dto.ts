@@ -27,7 +27,7 @@ export class SignUpDto extends SignInDto {
   @IsNotEmpty()
   lastName: string
 
-  role: Role
+  roles?: Role[]
 }
 
 export class SignOutDto {

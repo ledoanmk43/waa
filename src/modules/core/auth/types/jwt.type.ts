@@ -7,3 +7,5 @@ export type TJwtPayload = {
   iat?: number
   exp?: number
 }
+
+export type TJwt_Secret = 'AC_JWT_SECRET' | 'RF_JWT_SECRET'

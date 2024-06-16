@@ -77,11 +77,6 @@ export class User extends BaseEntity {
   }
 
   @BeforeUpdate()
-  setUpdateBy() {
-    this.updatedBy = this.id
-  }
-
-  @BeforeUpdate()
   @BeforeInsert()
   hashPassword() {
     this.password = bcrypt.hashSync(this.password, bcrypt.genSaltSync())

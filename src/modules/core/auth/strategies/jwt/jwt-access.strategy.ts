@@ -1,6 +1,6 @@
 import { FastifyRequest } from 'fastify'
 import { UserService } from '@core/user/services'
-import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common'
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common'
 import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 import { CacheService } from '@infra/cache/cache.service'
@@ -10,10 +10,13 @@ import { TJwtPayload } from '@core/auth/types'
 import ContextStorageService from '@infra/context/context-storage.service'
 import { CONTEXT_STORAGE_KEY } from '@infra/context/context.constant'
 import { CX_HISTORY_ENTITY } from '@common/constants'
+import { ILogger } from '@infra/logger/interface'
+import { LOGGER_KEY } from '@infra/logger/logger.constant'
 
 @Injectable()
 export class JwtAccessStrategy extends PassportStrategy(Strategy, JWT_ACCESS_GUARD) {
   constructor(
+    @Inject(LOGGER_KEY) private _logger: ILogger,
     private readonly _cacheService: CacheService,
     private readonly _userService: UserService,
     private readonly configService: ConfigService,
@@ -50,7 +53,7 @@ export class JwtAccessStrategy extends PassportStrategy(Strategy, JWT_ACCESS_GUA
         throw new UnauthorizedException()
       }
     } catch (error) {
-      Logger.error(error.message)
+      this._logger.error(error.message)
       throw new UnauthorizedException(error.message)
     }
     // Finally

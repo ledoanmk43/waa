@@ -22,6 +22,8 @@ export class InitRoleTable1718171964616 implements MigrationInterface {
         (
             user_id uuid NOT NULL,
             role_id uuid NOT NULL,
+            "CRE_DT" timestamp without time zone NOT NULL DEFAULT now(),
+            "UPD_DT" timestamp without time zone NOT NULL DEFAULT now(),
             CONSTRAINT user_roles_pkey PRIMARY KEY (user_id, role_id),
             CONSTRAINT fk_user FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
             CONSTRAINT fk_role FOREIGN KEY(role_id) REFERENCES roles(id) ON DELETE CASCADE
@@ -29,8 +31,8 @@ export class InitRoleTable1718171964616 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP TABLE IF EXISTS roles`)
+    await queryRunner.query(`DROP TABLE IF EXISTS roles CASCADE`)
 
-    await queryRunner.query(`DROP TABLE IF EXISTS user_roles`)
+    await queryRunner.query(`DROP TABLE IF EXISTS user_roles CASCADE`)
   }
 }

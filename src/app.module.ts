@@ -9,7 +9,7 @@ import { UserModule } from '@core/user/user.module'
 import { DynamicCacheModule } from '@infra/cache/cache.module'
 import { cacheConfig } from '@infra/cache/cache.config'
 import { AuthModule } from '@core/auth/auth.module'
-import { EntityHistorySubscriber } from '@infra/database/subscribers'
+import { DynamicCronJobModule } from '@infra/cronjob/cron.module'
 
 @Module({
   imports: [
@@ -21,10 +21,11 @@ import { EntityHistorySubscriber } from '@infra/database/subscribers'
     DynamicLoggerModule.registerAsync(),
     DynamicCacheModule.registerAsync({ isGlobal: true }),
     DynamicDatabaseModule.registerAsync(),
+    DynamicCronJobModule.registerAsync(),
     UserModule,
     AuthModule
   ],
   controllers: [],
-  providers: [EntityHistorySubscriber]
+  providers: []
 })
 export class AppModule {}

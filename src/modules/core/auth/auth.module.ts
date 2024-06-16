@@ -17,6 +17,7 @@ import { AuthRepository } from './auth.repository'
     TypeOrmModule.forFeature([BlacklistRefreshToken])
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtAccessStrategy, JwtRefreshStrategy, GoogleStrategy, AuthRepository]
+  providers: [AuthService, AuthRepository, JwtAccessStrategy, JwtRefreshStrategy, GoogleStrategy],
+  exports: [AuthRepository]
 })
 export class AuthModule {}

@@ -4,7 +4,7 @@ import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common'
 import { Role } from '../entities'
 import { RoleRepository } from '../repositories'
 import { BaseService } from '@common/base'
-import { ECommonMessage, ERoleMessage } from '@common/enums'
+import { ERoleMessage } from '@common/enums'
 
 @Injectable()
 export class RoleService extends BaseService<Role> {
@@ -31,10 +31,8 @@ export class RoleService extends BaseService<Role> {
 
   async addRole(roleDto: Role): Promise<Role> {
     try {
-      const role = await this._repository.save(roleDto)
-      if (!role) {
-        throw new Error(ECommonMessage.FAIL_TO_CREATE)
-      }
+      const newRole = this._repository.create(roleDto)
+      const role = await this._repository.save(newRole)
 
       return role
     } catch (error) {

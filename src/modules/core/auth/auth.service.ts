@@ -1,20 +1,23 @@
 import { User } from '@core/user/entities'
 import { UserService, RoleService } from '@core/user/services'
-import { BadRequestException, HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common'
+import { BadRequestException, HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common'
 import { JwtService, JwtSignOptions } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
-import { AuthResponseDto, SignInDto, SignUpDto } from './dtos'
-import { TBlacklistService, TJwtPayload } from './types'
-import { ECommonMessage, ETimeUnit, EUserMessage } from '@common/enums'
+import { AuthResponse, SignInDto, SignUpDto } from './dtos'
+import { TJwt_Secret, TBlacklistService, TJwtPayload, TOAuthPayload } from './types'
+import { ECommonErrorMessage, ETimeUnit, EUserMessage } from '@common/enums'
 import { CacheService } from '@infra/cache/cache.service'
 import { ConfigService } from '@infra/config/config.service'
 import { BlacklistRefreshToken } from './entities'
 import { AuthRepository } from './auth.repository'
 import { BaseService } from '@common/base'
+import { ILogger } from '@infra/logger/interface'
+import { LOGGER_KEY } from '@infra/logger/logger.constant'
 
 @Injectable()
 export class AuthService extends BaseService<BlacklistRefreshToken> {
   constructor(
+    @Inject(LOGGER_KEY) private _logger: ILogger,
     private readonly _cacheService: CacheService,
     private readonly _userService: UserService,
     private readonly _roleService: RoleService,
@@ -25,110 +28,60 @@ export class AuthService extends BaseService<BlacklistRefreshToken> {
     super(_repository)
   }
 
-  private accessTokenSecret = this._configService.get<string>('AC_JWT_SECRET')
-  private refreshTokenSecret = this._configService.get<string>('RF_JWT_SECRET')
+  private accessTokenSecret = this._configService.get<TJwt_Secret>('AC_JWT_SECRET')
+  private refreshTokenSecret = this._configService.get<TJwt_Secret>('RF_JWT_SECRET')
 
-  //   async googleLogin(userDto: OAuthUser): Promise<AuthResponseDto> {
-  //     const defaultPassword: string = generateRandomPassword()
-  //     try {
-  //       const user = await this.userService.searchUserByCondition({
-  //         where: { email: userDto.email },
-  //         relations: ['roles']
-  //       })
-
-  //       if (user) {
-  //         // When this email exists in system
-  //         const roleIdList = user.roles.map((role) => {
-  //           return role.id
-  //         })
-  //         // Return JWT if success
-  //         return this.generateAccessToken(user, roleIdList)
-  //       } else {
-  //         // When this email first time registers to the system
-  //         const newUserDto: RegisterDTO = {
-  //           firstName: userDto.firstName,
-  //           lastName: userDto.lastName,
-  //           email: userDto.email,
-  //           password: defaultPassword,
-  //           role: null
-  //         }
-  //         // Create new user
-  //         const user = await this.userService.addUser(newUserDto)
-  //         // Get role
-  //         const role = await this.roleService.searchRoleByCondition({
-  //           where: { name: 'USER' },
-  //           relations: ['users']
-  //         })
-  //         role.users.push(user)
-  //         //Insert to junction table
-  //         const savedRole = await this.roleService.addRole(role)
-  //         // Send mail notification user about new password
-  //         if (user) {
-  //           const idToken = getRandomToken()
-
-  //           const mailingParams = new SendChangePwMailRequest(
-  //             idToken,
-  //             defaultPassword,
-  //             user.firstName,
-  //             user.email,
-  //             process.env.AUTH_RESET_PASSWORD_URL
-  //           )
-  //           const mailingResponse = await new Promise<boolean>((resolve) => {
-  //             this.mailingClient
-  //               .emit(GET_MAILING_ON_SIGNUP_RESPONSE_TOPIC, JSON.stringify(mailingParams))
-  //               .subscribe((data) => {
-  //                 if (data) {
-  //                   resolve(true)
-  //                 } else {
-  //                   resolve(false)
-  //                 }
-  //               })
-  //           })
-  //           if (mailingResponse) {
-  //             await this.cacheManager.set(
-  //               idToken,
-  //               REDIS_CHANGE_PW_SESSION,
-  //               Number(process.env.REDIS_NEW_PW_MAIL_EXPIRE_TIME)
-  //             ) // expire in 1 day
-  //             // return this.generateAccessToken(user, [savedRole.id]);
-  //           }
-  //         }
-  //       }
-  //     } catch (error) {
-  //       Logger.error(error.message)
-  //       throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
-  //     }
-  //   }
-
-  // Register new user
-  async signUpUser(userDto: SignUpDto): Promise<AuthResponseDto> {
+  async googleLogin(payload: TOAuthPayload): Promise<AuthResponse> {
     try {
-      // Create new user
-      const user = await this._userService.addUser(userDto)
-
-      // Get role
-      const role = await this._roleService.searchRoleByCondition({
-        where: { name: 'USER' },
-        relations: ['users']
+      let targetUser: User
+      targetUser = await this._userService.searchUserByCondition({
+        where: { email: payload.email },
+        relations: ['roles']
       })
-      role.users.push(user)
 
-      //Insert to junction table
-      const savedRole = await this._roleService.addRole(role)
+      if (!targetUser) {
+        // When this email first time registers to the system
+        const userDto: SignUpDto = {
+          firstName: payload.firstName,
+          lastName: payload.lastName,
+          email: payload.email,
+          password: this.generateRandomPassword() // Generate random password
+        }
+
+        //Create new user and Insert to junction table
+        targetUser = await this.createAndAssignRoleToUser(userDto)
+      }
 
       // Return JWT access + refresh tokens when succeed
       return {
-        accessToken: this.generateJwtAccessToken(user, [savedRole.id]),
-        refreshToken: this.generateJwtRefreshToken(user, [savedRole.id])
+        accessToken: this.generateJwtAccessToken(targetUser),
+        refreshToken: this.generateJwtRefreshToken(targetUser)
       }
     } catch (error) {
-      Logger.error(error.message)
+      this._logger.error(error.message)
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
+    }
+  }
+
+  // Register new user
+  async signUpUser(userDto: SignUpDto): Promise<AuthResponse> {
+    try {
+      //Create new user and Insert to junction table
+      const user = await this.createAndAssignRoleToUser(userDto)
+
+      // Return JWT access + refresh tokens when succeed
+      return {
+        accessToken: this.generateJwtAccessToken(user),
+        refreshToken: this.generateJwtRefreshToken(user)
+      }
+    } catch (error) {
+      this._logger.error(error.message)
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
     }
   }
 
   // Authenticate user
-  async signInUser(userDto: SignInDto): Promise<AuthResponseDto> {
+  async signInUser(userDto: SignInDto): Promise<AuthResponse> {
     try {
       // Find user by email
       const user = await this._userService.searchUserByCondition({
@@ -146,23 +99,19 @@ export class AuthService extends BaseService<BlacklistRefreshToken> {
         throw new BadRequestException(EUserMessage.WRONG_PASSWORD)
       }
 
-      const roleIdList = user.roles.map((role) => {
-        return role.id
-      })
-
       // Return JWT access + refresh tokens when succeed
       return {
-        accessToken: this.generateJwtAccessToken(user, roleIdList),
-        refreshToken: this.generateJwtRefreshToken(user, roleIdList)
+        accessToken: this.generateJwtAccessToken(user),
+        refreshToken: this.generateJwtRefreshToken(user)
       }
     } catch (error) {
-      Logger.error(error.message)
+      this._logger.error(error.message)
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
     }
   }
 
   // Refresh token
-  async refreshToken({ id, email }: TJwtPayload): Promise<AuthResponseDto> {
+  async refreshToken({ id, email, refreshToken }: TJwtPayload): Promise<AuthResponse> {
     try {
       const user = await this._userService.searchUserByCondition({
         where: { id, email },
@@ -173,17 +122,13 @@ export class AuthService extends BaseService<BlacklistRefreshToken> {
         throw new Error(EUserMessage.WRONG_USERNAME)
       }
 
-      const roleIdList = user.roles.map((role) => {
-        return role.id
-      })
-
       // Return new JWT access + refresh tokens when succeed
       return {
-        accessToken: this.generateJwtAccessToken(user, roleIdList),
-        refreshToken: this.generateJwtRefreshToken(user, roleIdList)
+        accessToken: this.generateJwtAccessToken(user),
+        refreshToken
       }
     } catch (error) {
-      Logger.error(error.message)
+      this._logger.error(error.message)
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
     }
   }
@@ -197,7 +142,7 @@ export class AuthService extends BaseService<BlacklistRefreshToken> {
       // Verify and blacklist refresh token
       await this.verifyAndBlacklistToken(refreshToken, this.refreshTokenSecret, 'postgres')
     } catch (error) {
-      Logger.error(error.message)
+      this._logger.error(error.message)
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
     }
   }
@@ -207,11 +152,11 @@ export class AuthService extends BaseService<BlacklistRefreshToken> {
     return !!redisData
   }
 
-  generateJwtAccessToken(user: User, roleIdList: string[]): string {
+  generateJwtAccessToken(user: User): string {
     const payload: TJwtPayload = {
       id: user.id,
       email: user.email,
-      roleIds: roleIdList
+      roleIds: user.roles.map((role) => role.id)
     }
 
     const jwtOptions: JwtSignOptions = {
@@ -222,11 +167,11 @@ export class AuthService extends BaseService<BlacklistRefreshToken> {
     return this._jwtService.sign(payload, jwtOptions)
   }
 
-  generateJwtRefreshToken(user: User, roleIdList: string[]): string {
+  generateJwtRefreshToken(user: User): string {
     const payload: TJwtPayload = {
       id: user.id,
       email: user.email,
-      roleIds: roleIdList
+      roleIds: user.roles.map((role) => role.id)
     }
 
     const jwtOptions: JwtSignOptions = {
@@ -258,7 +203,28 @@ export class AuthService extends BaseService<BlacklistRefreshToken> {
         await this._cacheService.set(token, id, ttl)
       }
     } else {
-      throw new HttpException(ECommonMessage.TOKEN_EXPIRED, HttpStatus.BAD_REQUEST)
+      throw new HttpException(ECommonErrorMessage.TOKEN_EXPIRED, HttpStatus.BAD_REQUEST)
+    }
+  }
+
+  async createAndAssignRoleToUser(userDto: SignUpDto) {
+    try {
+      // Get role
+      const role = await this._roleService.searchRoleByCondition({
+        where: { name: 'USER' }
+      })
+      // Assign role(s) to user
+      userDto.roles = [role]
+
+      // Create new user
+      const user = await this._userService.addUser(userDto)
+      // Attach role to user
+      user.roles = [role]
+
+      return user
+    } catch (error) {
+      this._logger.error(error.message)
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
     }
   }
 

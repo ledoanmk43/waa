@@ -27,4 +27,8 @@ export abstract class BaseRepository<T extends BaseEntity> {
   async delete(id: number): Promise<DeleteResult> {
     return await this.baseRepository.delete(id)
   }
+
+  async deleteMany(ids: number[] | string[]): Promise<DeleteResult> {
+    return await this.baseRepository.delete(ids)
+  }
 }

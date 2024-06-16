@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-export class AuthResponseDto {
+export class AuthResponse {
   @ApiProperty()
   accessToken: string
 
@@ -8,10 +8,10 @@ export class AuthResponseDto {
   refreshToken?: string
 }
 
-export class SendEmailResetPwResponseDto {
+export class SendEmailResetPwResponse {
   message: string
 }
 
-export class ValidRedisDTO {
+export class ValidRedisResponse {
   isValid: boolean
 }

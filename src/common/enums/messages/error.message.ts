@@ -1,4 +1,4 @@
-export enum ECommonMessage {
+export enum ECommonErrorMessage {
   FORBIDDEN = 'Forbidden',
   FAIL_TO_CREATE = 'Fail to create',
   FAIL_TO_UPDATE = 'Fail to update',

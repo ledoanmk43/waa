@@ -1,13 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsUUID } from 'class-validator'
-import {
-  BeforeInsert,
-  BeforeUpdate,
-  Column,
-  CreateDateColumn,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn
-} from 'typeorm'
+import { Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
 
 export abstract class BaseEntity {
@@ -17,28 +10,18 @@ export abstract class BaseEntity {
   id: string = uuidv4()
 
   @ApiProperty()
-  @CreateDateColumn({ name: 'CRE_DT' })
+  @CreateDateColumn({ name: 'CRE_DT', default: () => 'CURRENT_TIMESTAMP' })
   createdDate?: Date
 
   @ApiProperty()
-  @UpdateDateColumn({ name: 'UPD_DT' })
+  @UpdateDateColumn({ name: 'UPD_DT', onUpdate: 'CURRENT_TIMESTAMP' })
   updatedDate?: Date
 
   @ApiProperty()
-  @Column({ name: 'CRE_BY', default: 'system' })
+  @Column({ name: 'CRE_BY' })
   createdBy?: string
 
   @ApiProperty()
-  @Column({ name: 'UPD_BY', default: 'system' })
+  @Column({ name: 'UPD_BY' })
   updatedBy?: string
-
-  @BeforeInsert()
-  public setCreateDate(): void {
-    this.createdDate = new Date()
-  }
-
-  @BeforeUpdate()
-  public setUpdateDate(): void {
-    this.updatedDate = new Date()
-  }
 }

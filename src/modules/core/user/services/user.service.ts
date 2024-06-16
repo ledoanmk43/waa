@@ -20,6 +20,7 @@ export class UserService extends BaseService<User> {
   async addUser(userDto: SignUpDto): Promise<User> {
     try {
       const newUser = this._repository.create(userDto)
+      console.log(newUser)
       const user = await this._repository.save(newUser)
 
       return user

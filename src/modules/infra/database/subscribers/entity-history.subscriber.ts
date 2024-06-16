@@ -11,6 +11,8 @@ import { CX_HISTORY_ENTITY } from '@common/constants'
 import ContextStorageService from '@infra/context/context-storage.service'
 import { CONTEXT_STORAGE_KEY } from '@infra/context/context.constant'
 
+const today = new Date()
+
 @EventSubscriber()
 export class EntityHistorySubscriber implements EntitySubscriberInterface {
   constructor(
@@ -23,15 +25,19 @@ export class EntityHistorySubscriber implements EntitySubscriberInterface {
 
   async beforeInsert(event: InsertEvent<any>): Promise<void> {
     const user: TJwtPayload = this.cls.get(CX_HISTORY_ENTITY)
-    event.entity.createdBy = user.id
-    event.entity.updatedBy = user.id
-    event.entity.createdDate = new Date()
-    event.entity.updatedDate = new Date()
+    if (user) {
+      event.entity.createdBy = user.id
+      event.entity.updatedBy = user.id
+      event.entity.createdDate = today
+      event.entity.updatedDate = today
+    }
   }
 
   async beforeUpdate(event: UpdateEvent<any>): Promise<void> {
     const user: TJwtPayload = this.cls.get(CX_HISTORY_ENTITY)
-    event.entity.updatedBy = user.id
-    event.entity.updatedDate = new Date()
+    if (user) {
+      event.entity.updatedBy = user.id
+      event.entity.updatedDate = today
+    }
   }
 }

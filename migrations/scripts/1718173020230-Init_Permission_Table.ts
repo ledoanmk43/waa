@@ -21,6 +21,8 @@ export class InitPermissionTable1718173020230 implements MigrationInterface {
     (
         role_id uuid NOT NULL,
         permission_id uuid NOT NULL,
+        "CRE_DT" timestamp without time zone NOT NULL DEFAULT now(),
+        "UPD_DT" timestamp without time zone NOT NULL DEFAULT now(),
         CONSTRAINT role_permissions_pkey PRIMARY KEY (role_id, permission_id),
         CONSTRAINT fk_role FOREIGN KEY(role_id) REFERENCES roles(id) ON DELETE CASCADE,
         CONSTRAINT fk_permission FOREIGN KEY(permission_id) REFERENCES permissions(id) ON DELETE CASCADE
@@ -28,8 +30,8 @@ export class InitPermissionTable1718173020230 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP TABLE IF EXISTS permissions`)
+    await queryRunner.query(`DROP TABLE IF EXISTS permissions CASCADE`)
 
-    await queryRunner.query(`DROP TABLE IF EXISTS role_permissions`)
+    await queryRunner.query(`DROP TABLE IF EXISTS role_permissions CASCADE`)
   }
 }

@@ -32,6 +32,6 @@ export class InitUserTable1718166211525 implements MigrationInterface {
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DROP INDEX IF EXISTS idx_users_email`)
 
-    await queryRunner.query(`DROP TABLE IF EXISTS users`)
+    await queryRunner.query(`DROP TABLE IF EXISTS users CASCADE`)
   }
 }

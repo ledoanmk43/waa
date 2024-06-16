@@ -4,6 +4,7 @@ import type { DynamicDatabaseOptions } from './interface/database-module-config.
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { ConfigService } from '@infra/config/config.service'
 import { IDatabaseConfig } from './interface'
+import { EntityHistorySubscriber } from './subscribers'
 
 @Module({})
 export class DynamicDatabaseModule {
@@ -29,6 +30,7 @@ export class DynamicDatabaseModule {
           inject: [ConfigService]
         })
       ],
+      providers: [EntityHistorySubscriber],
       global: isGlobal
     }
   }
