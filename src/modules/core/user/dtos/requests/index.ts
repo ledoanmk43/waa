@@ -1,1 +1,1 @@
-export * from './get-user-request.dto'
+export * from './forgot-password.dto'

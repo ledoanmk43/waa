@@ -33,6 +33,7 @@ async function bootstrap() {
     .setDescription(pkDescription)
     .setVersion(pkVersion)
     .addTag(pkName, pkDescription)
+    .addBearerAuth()
     .build()
 
   const document = SwaggerModule.createDocument(app, options)

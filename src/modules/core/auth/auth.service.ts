@@ -13,6 +13,7 @@ import { AuthRepository } from './auth.repository'
 import { BaseService } from '@common/base'
 import { ILogger } from '@infra/logger/interface'
 import { LOGGER_KEY } from '@infra/logger/logger.constant'
+import { generateRandomPassword } from '@common/helpers'
 
 @Injectable()
 export class AuthService extends BaseService<BlacklistRefreshToken> {
@@ -31,7 +32,7 @@ export class AuthService extends BaseService<BlacklistRefreshToken> {
   private accessTokenSecret = this._configService.get<TJwt_Secret>('AC_JWT_SECRET')
   private refreshTokenSecret = this._configService.get<TJwt_Secret>('RF_JWT_SECRET')
 
-  async googleLogin(payload: TOAuthPayload): Promise<AuthResponse> {
+  async googleSignIn(payload: TOAuthPayload): Promise<AuthResponse> {
     try {
       let targetUser: User
       targetUser = await this._userService.searchUserByCondition({
@@ -45,7 +46,7 @@ export class AuthService extends BaseService<BlacklistRefreshToken> {
           firstName: payload.firstName,
           lastName: payload.lastName,
           email: payload.email,
-          password: this.generateRandomPassword() // Generate random password
+          password: generateRandomPassword() // Generate random password
         }
 
         //Create new user and Insert to junction table
@@ -226,31 +227,5 @@ export class AuthService extends BaseService<BlacklistRefreshToken> {
       this._logger.error(error.message)
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
     }
-  }
-
-  private generateRandomPassword(): string {
-    const passwordLength = 8 // You can adjust the desired password length here
-    const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz'
-    const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    const digitChars = '0123456789'
-    const specialChars = '!@#$%^&*()_+-=[]{}|;:,.<>?'
-
-    const allChars = lowercaseChars + uppercaseChars + digitChars + specialChars
-
-    let randomPassword = ''
-    for (let i = 0; i < passwordLength + 1; i++) {
-      const randomIndex = Math.floor(Math.random() * allChars.length)
-      randomPassword += allChars[randomIndex]
-    }
-
-    return randomPassword + Math.floor(Math.random() * 10)
-  }
-
-  private getRandomToken(): string {
-    return (
-      Math.random().toString(36).substring(2, 15) +
-      Math.random().toString(36).substring(2, 15) +
-      Math.random().toString(36).substring(2, 15)
-    )
   }
 }

@@ -16,7 +16,9 @@ import { GoogleOauthGuard, JwtAccessGuard, JwtRefreshGuard } from './guards'
 import { AuthService } from './auth.service'
 import { AuthResponse, RedisTokenDto, SignInDto, SignOutDto, SignUpDto } from './dtos'
 import { TCustomOAuthRequest, TCustomRequest } from './types'
+import { ApiBearerAuth } from '@nestjs/swagger'
 
+@ApiBearerAuth()
 @Controller('auth')
 @UsePipes(new ValidationPipe({ transform: true }))
 export class AuthController {
@@ -25,18 +27,19 @@ export class AuthController {
     private readonly _configService: ConfigService
   ) {}
 
-  @UseGuards(GoogleOauthGuard)
   @Get('google')
+  @UseGuards(GoogleOauthGuard)
   async googleAuth() {}
 
   @Get('google-redirect')
   @UseGuards(GoogleOauthGuard)
-  async googleAuthRedirect(@Req() req: TCustomOAuthRequest, @Res() res) {
-    const googleResponse = await this.authService.googleLogin(req.user)
+  async googleAuthRedirect(@Req() { user }: TCustomOAuthRequest, @Res() res) {
+    console.log(user)
+    const googleResponse = await this.authService.googleSignIn(user)
     if (googleResponse) {
       res.redirect(this._configService.get('GOOGLE_REDIRECT_URL') + googleResponse.accessToken)
     } else {
-      res.redirect('http://localhost:3000/login')
+      res.redirect('http://localhost:3001/waa/api/auth/sign-in')
     }
   }
 
