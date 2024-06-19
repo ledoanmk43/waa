@@ -67,7 +67,7 @@ export class AuthService extends BaseService<BlacklistRefreshToken> {
   // Register new user
   async signUpUser(userDto: SignUpDto): Promise<AuthResponse> {
     try {
-      //Create new user and Insert to junction table
+      // Create new user and Insert to junction table
       const user = await this.createAndAssignRoleToUser(userDto)
 
       // Return JWT access + refresh tokens when succeed

@@ -12,6 +12,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { description as pkDescription, name as pkName, version as pkVersion } from '../package.json'
 import { AppModule } from './app.module'
+import { JwtAccessGuard } from '@common/guards'
 
 const prefix = 'waa/api'
 async function bootstrap() {
@@ -20,8 +21,13 @@ async function bootstrap() {
     bufferLogs: true
   })
 
+  const reflector = app.get(Reflector)
   app.setGlobalPrefix(prefix)
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)))
+
+  app.useGlobalGuards(new JwtAccessGuard(reflector))
+
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(reflector))
+
   const configService = app.get(ConfigService)
   const defaultConfig = configService.get<IDefaultConfig>('default')
 

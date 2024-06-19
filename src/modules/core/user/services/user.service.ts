@@ -31,7 +31,7 @@ export class UserService extends BaseService<User> {
   async addUser(userDto: SignUpDto): Promise<User> {
     try {
       const newUser = this._repository.create(userDto)
-      console.log(newUser)
+
       const user = await this._repository.save(newUser)
 
       return user
@@ -74,7 +74,7 @@ export class UserService extends BaseService<User> {
       const sessionToken = getRandomToken()
       const payload: TMailPayload = {
         to: email,
-        subject: '[Reset Password] Reset your CLV training password',
+        subject: '[Reset Password] Reset your password',
         template: 'forgot-password',
         context: {
           expireTime: '15 minutes',
@@ -94,88 +94,6 @@ export class UserService extends BaseService<User> {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
     }
   }
-
-  // async updateUserStatusByEmail(activateDto: ActivateDto): Promise<void> {
-  //   try {
-  //     const user = await this.searchUserByCondition({
-  //       where: { email: activateDto.email }
-  //     })
-  //     if (user) {
-  //       await this.repository
-  //         .createQueryBuilder()
-  //         .update(User)
-  //         .set({
-  //           isDisable: !user.isDisable,
-  //           isPending: !user.isPending
-  //         })
-  //         .where('id = :id', { id: user.id })
-  //         .execute()
-  //     } else {
-  //       throw new Error('user not found')
-  //     }
-  //   } catch (error) {
-  //     this.logger.error(error.message)
-  //     throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
-  //   }
-  // }
-
-  // async updateUserPwByEmail(userEmail: string, temporaryPw: string): Promise<User> {
-  //   try {
-  //     const user = await this.searchUserByCondition({
-  //       where: { email: userEmail }
-  //     })
-  //     if (user) {
-  //       temporaryPw = bcrypt.hashSync(temporaryPw, bcrypt.genSaltSync())
-  //       await this.repository
-  //         .createQueryBuilder()
-  //         .update(User)
-  //         .set({
-  //           password: temporaryPw
-  //         })
-  //         .where('id = :id', { id: user.id })
-  //         .execute()
-  //       return user
-  //     } else {
-  //       throw new Error('This email does not exist')
-  //     }
-  //   } catch (error) {
-  //     this.logger.error(error.message)
-  //     throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
-  //   }
-  // }
-
-  // async resetPw(resetPwDto: ResetPwDto): Promise<void> {
-  //   try {
-  //     const user = await this.searchUserByCondition({
-  //       where: { email: resetPwDto.email }
-  //     })
-  //     // Verify password
-  //     if (user) {
-  //       //check current password from dto and user in db
-  //       const isVerified = await bcrypt.compare(resetPwDto.currentPassword, user.password)
-  //       if (isVerified) {
-  //         // hash password from dto
-  //         const newPw = bcrypt.hashSync(resetPwDto.newPassword, bcrypt.genSaltSync())
-  //         // and then save new password
-  //         await this.repository
-  //           .createQueryBuilder()
-  //           .update(User)
-  //           .set({
-  //             password: newPw
-  //           })
-  //           .where('id = :id', { id: user.id })
-  //           .execute()
-  //       } else {
-  //         throw new Error('wrong current password')
-  //       }
-  //     } else {
-  //       throw new Error('user not found')
-  //     }
-  //   } catch (error) {
-  //     this.logger.error(error.message)
-  //     throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
-  //   }
-  // }
 
   async getAllUsers(): Promise<User[]> {
     try {

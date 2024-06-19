@@ -12,7 +12,7 @@ import {
   UsePipes,
   ValidationPipe
 } from '@nestjs/common'
-import { GoogleOauthGuard, JwtAccessGuard, JwtRefreshGuard } from './guards'
+import { GoogleOauthGuard, JwtAccessGuard, JwtRefreshGuard } from '../../../common/guards'
 import { AuthService } from './auth.service'
 import { AuthResponse, RedisTokenDto, SignInDto, SignOutDto, SignUpDto } from './dtos'
 import { TCustomOAuthRequest, TCustomRequest } from './types'

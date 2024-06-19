@@ -2,9 +2,10 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards } fro
 import { UserService } from './services'
 import { TCustomRequest } from '@core/auth/types'
 import { User } from './entities'
-import { JwtAccessGuard } from '@core/auth/guards'
+import { JwtAccessGuard } from '@common/guards'
 import { ApiBearerAuth } from '@nestjs/swagger'
 import { ForgotPasswordDto } from './dtos'
+import { Public } from '@common/decorators'
 
 @ApiBearerAuth()
 @Controller('user')
@@ -18,6 +19,7 @@ export class UserController {
     return this._userService.searchUserById(user.id)
   }
 
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('forgot-password')
   forgotPassword(@Body() dto: ForgotPasswordDto): Promise<void> {
