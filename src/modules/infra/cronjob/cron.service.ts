@@ -1,11 +1,11 @@
+import { ECommonInfor } from '@common/enums'
 import { AuthRepository } from '@core/auth/auth.repository'
+import { ILogger } from '@infra/logger/interface'
+import { LOGGER_KEY } from '@infra/logger/logger.constant'
 import { BadRequestException, Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { Cron, SchedulerRegistry } from '@nestjs/schedule'
 import { LessThanOrEqual } from 'typeorm'
 import { ECronPattern } from './ cron-pattern.enum'
-import { ILogger } from '@infra/logger/interface'
-import { LOGGER_KEY } from '@infra/logger/logger.constant'
-import { ECommonInforMessage } from '@common/enums'
 
 @Injectable()
 export default class CronJobService extends SchedulerRegistry implements OnModuleInit {
@@ -38,13 +38,13 @@ export default class CronJobService extends SchedulerRegistry implements OnModul
       if (tokens?.length) {
         const ids = tokens.map((token) => token.id)
         await this._authRepository.deleteMany(ids)
-        this._logger.info(`[${ids.length}] ${ECommonInforMessage.EXPIRED_REFRESH_TOKEN_REMOVED}}`)
+        this._logger.info(`[${ids.length}] ${ECommonInfor.EXPIRED_REFRESH_TOKEN_REMOVED}}`)
       }
     } catch (error) {
       this._logger.error(error.message)
       throw new BadRequestException(error.message)
     }
 
-    this._logger.info(`${today.toLocaleString()} - ${ECommonInforMessage.NO_REFRESH_TOKEN_FOUND}`)
+    this._logger.info(`${today.toLocaleString()} - ${ECommonInfor.NO_REFRESH_TOKEN_FOUND}`)
   }
 }

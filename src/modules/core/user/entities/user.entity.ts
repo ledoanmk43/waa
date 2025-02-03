@@ -13,43 +13,43 @@ export class User extends BaseEntity {
     Object.assign(this, partial)
   }
 
-  @ApiProperty()
+
   @Column({ name: 'EMAIL', unique: true, length: 255 })
   @IsEmail()
   @IsNotEmpty()
   email: string
 
-  @ApiProperty()
+
   @Column({ name: 'PASSWORD', length: 255 })
   @IsNotEmpty()
   @Exclude()
   password: string
 
-  @ApiProperty()
+
   @Column({ name: 'IS_PENDING', type: 'boolean', default: true })
   isPending?: boolean
 
-  @ApiProperty()
+  
   @Column({ name: 'IS_DISABLE', type: 'boolean', default: false })
   isDisable?: boolean
 
-  @ApiProperty()
+  
   @Column({ name: 'FIRSTNAME', length: 255 })
   firstName: string
 
-  @ApiProperty()
+  
   @Column({ name: 'LASTNAME', length: 255 })
   lastName: string
 
-  @ApiProperty()
+  
   @Column({ name: 'GLOBAL_ID', nullable: true })
   globalId?: string
 
-  @ApiProperty()
+  
   @Column({ name: 'OFFICE_CODE', nullable: true })
   officeCode?: string
 
-  @ApiProperty()
+  
   @Column({ name: 'COUNTRY', nullable: true })
   country?: string
 

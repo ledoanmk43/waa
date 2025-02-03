@@ -1,23 +1,23 @@
-import { UserService } from '@core/user/services'
-import { Injectable, UnauthorizedException } from '@nestjs/common'
-import { PassportStrategy } from '@nestjs/passport'
-import { ExtractJwt, Strategy } from 'passport-jwt'
-import { ConfigService } from '@infra/config/config.service'
+import { AuthRepository } from '@core/auth/auth.repository'
 import { JWT_REFRESH_GUARD } from '@core/auth/constants'
 import { TJwtPayload } from '@core/auth/types'
+import { UserService } from '@core/user/services'
+import { ConfigService } from '@infra/config/config.service'
+import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { PassportStrategy } from '@nestjs/passport'
 import { FastifyRequest } from 'fastify'
-import { AuthRepository } from '@core/auth/auth.repository'
+import { ExtractJwt, Strategy } from 'passport-jwt'
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(Strategy, JWT_REFRESH_GUARD) {
   constructor(
     private readonly _userService: UserService,
-    private readonly configService: ConfigService,
+    private readonly _configService: ConfigService,
     private readonly _repository: AuthRepository
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: configService.get<string>('RF_JWT_SECRET'),
+      secretOrKey: _configService.get<string>('RF_JWT_SECRET'),
       passReqToCallback: true
     })
   }

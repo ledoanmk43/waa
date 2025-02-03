@@ -1,19 +1,19 @@
+import { BaseService } from '@common/base'
+import { ECommonError, ETimeUnit, EUserError } from '@common/enums'
+import { generateRandomPassword } from '@common/helpers'
 import { User } from '@core/user/entities'
-import { UserService, RoleService } from '@core/user/services'
+import { RoleService, UserService } from '@core/user/services'
+import { CacheService } from '@infra/cache/cache.service'
+import { ConfigService } from '@infra/config/config.service'
+import { ILogger } from '@infra/logger/interface'
+import { LOGGER_KEY } from '@infra/logger/logger.constant'
 import { BadRequestException, HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common'
 import { JwtService, JwtSignOptions } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
-import { AuthResponse, SignInDto, SignUpDto } from './dtos'
-import { TJwt_Secret, TBlacklistService, TJwtPayload, TOAuthPayload } from './types'
-import { ECommonErrorMessage, ETimeUnit, EUserMessage } from '@common/enums'
-import { CacheService } from '@infra/cache/cache.service'
-import { ConfigService } from '@infra/config/config.service'
-import { BlacklistRefreshToken } from './entities'
 import { AuthRepository } from './auth.repository'
-import { BaseService } from '@common/base'
-import { ILogger } from '@infra/logger/interface'
-import { LOGGER_KEY } from '@infra/logger/logger.constant'
-import { generateRandomPassword } from '@common/helpers'
+import { AuthResponse, SignInDto, SignUpDto } from './dtos'
+import { BlacklistRefreshToken } from './entities'
+import { TBlacklistService, TJwt_Secret, TJwtPayload, TOAuthPayload } from './types'
 
 @Injectable()
 export class AuthService extends BaseService<BlacklistRefreshToken> {
@@ -67,7 +67,7 @@ export class AuthService extends BaseService<BlacklistRefreshToken> {
   // Register new user
   async signUpUser(userDto: SignUpDto): Promise<AuthResponse> {
     try {
-      //Create new user and Insert to junction table
+      // Create new user and Insert to junction table
       const user = await this.createAndAssignRoleToUser(userDto)
 
       // Return JWT access + refresh tokens when succeed
@@ -91,13 +91,13 @@ export class AuthService extends BaseService<BlacklistRefreshToken> {
       })
 
       if (!user) {
-        throw new Error(EUserMessage.WRONG_USERNAME)
+        throw new Error(EUserError.WRONG_USERNAME)
       }
 
       // Verify password
       const isVerified = await bcrypt.compare(userDto.password, user.password)
       if (!isVerified) {
-        throw new BadRequestException(EUserMessage.WRONG_PASSWORD)
+        throw new BadRequestException(EUserError.WRONG_PASSWORD)
       }
 
       // Return JWT access + refresh tokens when succeed
@@ -120,7 +120,7 @@ export class AuthService extends BaseService<BlacklistRefreshToken> {
       })
 
       if (!user) {
-        throw new Error(EUserMessage.WRONG_USERNAME)
+        throw new Error(EUserError.WRONG_USERNAME)
       }
 
       // Return new JWT access + refresh tokens when succeed
@@ -138,10 +138,10 @@ export class AuthService extends BaseService<BlacklistRefreshToken> {
   async signOutUser(accessToken: string, refreshToken: string) {
     try {
       // Verify and blacklist access token
-      await this.verifyAndBlacklistToken(accessToken, this.accessTokenSecret, 'redis')
+      await this.verifyAccessToken(accessToken, this.accessTokenSecret, 'redis')
 
       // Verify and blacklist refresh token
-      await this.verifyAndBlacklistToken(refreshToken, this.refreshTokenSecret, 'postgres')
+      await this.verifyAccessToken(refreshToken, this.refreshTokenSecret, 'postgres')
     } catch (error) {
       this._logger.error(error.message)
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
@@ -183,28 +183,35 @@ export class AuthService extends BaseService<BlacklistRefreshToken> {
     return this._jwtService.sign(payload, jwtOptions)
   }
 
-  // Helper function to verify token and handle token blacklisting
-  async verifyAndBlacklistToken(token: string, secret: string, type: TBlacklistService) {
-    const payload: TJwtPayload = this._jwtService.verify(token, { secret })
-    const { id, exp } = payload
+  // Helper function to verify active token and handle token blacklisting
+  async verifyAccessToken(token: string, secret: string, type: TBlacklistService) {
+    const { id, exp }: TJwtPayload = this._jwtService.verify(token, { secret })
     const currentTime = Math.floor(Date.now() / ETimeUnit.SECOND_IN_MILLISECONDS)
     const ttl: number = (exp - currentTime) * ETimeUnit.SECOND_IN_MILLISECONDS
 
-    if (ttl > 0) {
-      if (type === 'postgres') {
-        // Add refresh token to blacklist in postgres
-        const refreshTokenEntity = this._repository.create({
-          token,
-          expireDate: new Date(exp * ETimeUnit.SECOND_IN_MILLISECONDS)
-        })
+    if (ttl > ETimeUnit.INITIAL_TIME_UNIT) {
+      switch (type) {
+        case 'redis': {
+          // Add access token to blacklist in redis
+          await this._cacheService.set(token, id, ttl)
+          break
+        }
+        case 'postgres': {
+          // Add refresh token to blacklist in postgres
+          const refreshTokenEntity = this._repository.create({
+            token,
+            expireDate: new Date(exp * ETimeUnit.SECOND_IN_MILLISECONDS)
+          })
 
-        await this._repository.save(refreshTokenEntity)
-      } else {
-        // Add access token to blacklist in redis
-        await this._cacheService.set(token, id, ttl)
+          // Save refresh token to blacklist
+          await this._repository.save(refreshTokenEntity)
+          break
+        }
+        default:
+          throw new HttpException(ECommonError.INVALID_TYPE, HttpStatus.BAD_REQUEST)
       }
     } else {
-      throw new HttpException(ECommonErrorMessage.TOKEN_EXPIRED, HttpStatus.BAD_REQUEST)
+      throw new HttpException(ECommonError.TOKEN_EXPIRED, HttpStatus.BAD_REQUEST)
     }
   }
 

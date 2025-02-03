@@ -1,4 +1,4 @@
-import { EUserMessage } from '@common/enums'
+import { EUserError } from '@common/enums'
 import { ValidatePwRegex } from '@core/auth/constants'
 import { Role } from '@core/user/entities'
 import { ApiProperty } from '@nestjs/swagger'
@@ -12,7 +12,7 @@ export class SignInDto {
 
   @ApiProperty()
   @Matches(ValidatePwRegex, {
-    message: EUserMessage.INVALID_USER_PASSWORD
+    message: EUserError.INVALID_USER_PASSWORD
   })
   @IsNotEmpty()
   password: string

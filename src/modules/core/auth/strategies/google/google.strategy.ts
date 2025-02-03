@@ -1,9 +1,9 @@
+import { GOOGLE_OAUTH_GUARD } from '@core/auth/constants'
+import { TOAuthPayload } from '@core/auth/types'
+import { ConfigService } from '@infra/config/config.service'
+import { Injectable } from '@nestjs/common'
 import { PassportStrategy } from '@nestjs/passport'
 import { Profile, Strategy, StrategyOptions, VerifyCallback } from 'passport-google-oauth20'
-import { Injectable } from '@nestjs/common'
-import { TOAuthPayload } from '@core/auth/types'
-import { GOOGLE_OAUTH_GUARD } from '@core/auth/constants'
-import { ConfigService } from '@infra/config/config.service'
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, GOOGLE_OAUTH_GUARD) {

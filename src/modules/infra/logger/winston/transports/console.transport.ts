@@ -15,7 +15,7 @@ export default class ConsoleTransport {
   public static createColorize() {
     return new winston.transports.Console({
       format: winston.format.combine(
-        winston.format.printf((log) => {
+        winston.format.printf((log: any) => {
           const color = this.mapLogLevelColor(log.level as ELogLevel)
           const prefix = `${log.data.label ? `[${log.data.label}]` : ''}`
           return `${this.colorize(color, prefix + '  -')} ${log.timestamp}    ${

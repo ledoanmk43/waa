@@ -1,4 +1,4 @@
-import { AdminPermission } from './admin-permission.constant'
+import { AdminPermission } from '.'
 
 export const SystemPermission = Object.freeze({
   ...AdminPermission,

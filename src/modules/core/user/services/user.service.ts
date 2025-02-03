@@ -1,25 +1,26 @@
 import { BaseService } from '@common/base'
-import { ILogger } from '@infra/logger/interface'
-import { LOGGER_KEY } from '@infra/logger/logger.constant'
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common'
-import { UserRepository } from '../repositories/user.repository'
-import { User } from '../entities'
-import { ETimeUnit, EUserMessage } from '@common/enums'
-import { SignUpDto } from '@core/auth/dtos'
-import { FindOneOptions } from 'typeorm'
-import MailService from '@infra/mailer/mailer.service'
-import { ForgotPasswordDto } from '../dtos'
-import { GMAIL_SERVICE } from '@infra/mailer/mailer.constant'
-import { TMailPayload } from '@infra/mailer/mailer-option.type'
+import { ETimeUnit, EUserError } from '@common/enums'
 import { getRandomToken } from '@common/helpers'
+import { SignUpDto } from '@core/auth/dtos'
 import { CacheService } from '@infra/cache/cache.service'
 import { ConfigService } from '@infra/config/config.service'
+import { ILogger } from '@infra/logger/interface'
+import { LOGGER_KEY } from '@infra/logger/logger.constant'
+import { TMailPayload } from '@infra/mailer/mailer-option.type'
+import { GMAIL_SERVICE } from '@infra/mailer/mailer.constant'
+import MailService from '@infra/mailer/mailer.service'
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common'
+import { FindOneOptions } from 'typeorm'
+import { ForgotPasswordDto } from '../dtos'
+import { User } from '../entities'
+import { UserRepository } from '../repositories/user.repository'
 
 @Injectable()
 export class UserService extends BaseService<User> {
   constructor(
     @Inject(LOGGER_KEY) private _logger: ILogger,
     private readonly _repository: UserRepository,
+
     @Inject(GMAIL_SERVICE)
     private readonly _mailService: MailService,
     private readonly _cacheService: CacheService,
@@ -31,14 +32,14 @@ export class UserService extends BaseService<User> {
   async addUser(userDto: SignUpDto): Promise<User> {
     try {
       const newUser = this._repository.create(userDto)
-      console.log(newUser)
+
       const user = await this._repository.save(newUser)
 
       return user
     } catch (error) {
       this._logger.error(error.message)
       if (error.message.includes('duplicate key')) {
-        throw new HttpException(EUserMessage.ALREADY_EXISTS_EMAIL, HttpStatus.CONFLICT)
+        throw new HttpException(EUserError.ALREADY_EXISTS_EMAIL, HttpStatus.CONFLICT)
       }
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
     }
@@ -69,12 +70,12 @@ export class UserService extends BaseService<User> {
     try {
       const user = await this._repository.findOne({ where: { email } })
       if (!user) {
-        throw new Error(EUserMessage.NOT_FOUND)
+        throw new Error(EUserError.NOT_FOUND)
       }
       const sessionToken = getRandomToken()
       const payload: TMailPayload = {
         to: email,
-        subject: '[Reset Password] Reset your CLV training password',
+        subject: '[Reset Password] Reset your password',
         template: 'forgot-password',
         context: {
           expireTime: '15 minutes',
@@ -95,88 +96,6 @@ export class UserService extends BaseService<User> {
     }
   }
 
-  // async updateUserStatusByEmail(activateDto: ActivateDto): Promise<void> {
-  //   try {
-  //     const user = await this.searchUserByCondition({
-  //       where: { email: activateDto.email }
-  //     })
-  //     if (user) {
-  //       await this.repository
-  //         .createQueryBuilder()
-  //         .update(User)
-  //         .set({
-  //           isDisable: !user.isDisable,
-  //           isPending: !user.isPending
-  //         })
-  //         .where('id = :id', { id: user.id })
-  //         .execute()
-  //     } else {
-  //       throw new Error('user not found')
-  //     }
-  //   } catch (error) {
-  //     this.logger.error(error.message)
-  //     throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
-  //   }
-  // }
-
-  // async updateUserPwByEmail(userEmail: string, temporaryPw: string): Promise<User> {
-  //   try {
-  //     const user = await this.searchUserByCondition({
-  //       where: { email: userEmail }
-  //     })
-  //     if (user) {
-  //       temporaryPw = bcrypt.hashSync(temporaryPw, bcrypt.genSaltSync())
-  //       await this.repository
-  //         .createQueryBuilder()
-  //         .update(User)
-  //         .set({
-  //           password: temporaryPw
-  //         })
-  //         .where('id = :id', { id: user.id })
-  //         .execute()
-  //       return user
-  //     } else {
-  //       throw new Error('This email does not exist')
-  //     }
-  //   } catch (error) {
-  //     this.logger.error(error.message)
-  //     throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
-  //   }
-  // }
-
-  // async resetPw(resetPwDto: ResetPwDto): Promise<void> {
-  //   try {
-  //     const user = await this.searchUserByCondition({
-  //       where: { email: resetPwDto.email }
-  //     })
-  //     // Verify password
-  //     if (user) {
-  //       //check current password from dto and user in db
-  //       const isVerified = await bcrypt.compare(resetPwDto.currentPassword, user.password)
-  //       if (isVerified) {
-  //         // hash password from dto
-  //         const newPw = bcrypt.hashSync(resetPwDto.newPassword, bcrypt.genSaltSync())
-  //         // and then save new password
-  //         await this.repository
-  //           .createQueryBuilder()
-  //           .update(User)
-  //           .set({
-  //             password: newPw
-  //           })
-  //           .where('id = :id', { id: user.id })
-  //           .execute()
-  //       } else {
-  //         throw new Error('wrong current password')
-  //       }
-  //     } else {
-  //       throw new Error('user not found')
-  //     }
-  //   } catch (error) {
-  //     this.logger.error(error.message)
-  //     throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
-  //   }
-  // }
-
   async getAllUsers(): Promise<User[]> {
     try {
       const users = await this._repository.find({
@@ -186,7 +105,7 @@ export class UserService extends BaseService<User> {
       })
 
       if (!users.length) {
-        throw new Error(EUserMessage.NOT_FOUND)
+        throw new Error(EUserError.NOT_FOUND)
       }
 
       return users

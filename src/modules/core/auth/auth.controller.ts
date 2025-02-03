@@ -12,7 +12,7 @@ import {
   UsePipes,
   ValidationPipe
 } from '@nestjs/common'
-import { GoogleOauthGuard, JwtAccessGuard, JwtRefreshGuard } from './guards'
+import { GoogleOauthGuard, JwtAccessGuard, JwtRefreshGuard } from '../../../common/guards'
 import { AuthService } from './auth.service'
 import { AuthResponse, RedisTokenDto, SignInDto, SignOutDto, SignUpDto } from './dtos'
 import { TCustomOAuthRequest, TCustomRequest } from './types'
@@ -34,7 +34,6 @@ export class AuthController {
   @Get('google-redirect')
   @UseGuards(GoogleOauthGuard)
   async googleAuthRedirect(@Req() { user }: TCustomOAuthRequest, @Res() res) {
-    console.log(user)
     const googleResponse = await this.authService.googleSignIn(user)
     if (googleResponse) {
       res.redirect(this._configService.get('GOOGLE_REDIRECT_URL') + googleResponse.accessToken)

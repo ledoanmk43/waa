@@ -1,12 +1,13 @@
-export enum ECommonErrorMessage {
+export enum ECommonError {
   FORBIDDEN = 'Forbidden',
   FAIL_TO_CREATE = 'Fail to create',
   FAIL_TO_UPDATE = 'Fail to update',
   FAIL_TO_DELETE = 'Fail to delete',
-  TOKEN_EXPIRED = 'Token expired'
+  TOKEN_EXPIRED = 'Token expired',
+  INVALID_TYPE = 'Invalid type'
 }
 
-export enum EUserMessage {
+export enum EUserError {
   NOT_FOUND = 'User not found',
   INVALID_EMAIL = 'Invalid email',
   INVALID_USERNAME_OR_PASSWORD = 'Invalid username or password',
@@ -23,7 +24,7 @@ export enum EUserMessage {
   WRONG_PASSWORD = 'Wrong password'
 }
 
-export enum ERoleMessage {
+export enum ERoleError {
   NOT_FOUND = 'Role not found',
   ALREADY_EXISTS = 'Role already exists',
   INVALID_ROLE_ID = 'Invalid role id',

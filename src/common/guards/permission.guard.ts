@@ -1,4 +1,4 @@
-import { ECommonErrorMessage } from '@common/enums'
+import { ECommonError } from '@common/enums'
 import { Role } from '@core/user/entities'
 import { RoleService } from '@core/user/services'
 import {
@@ -43,7 +43,7 @@ export class AuthorizationGuard implements CanActivate {
     if (hasPermission) {
       return true
     }
-    throw new Error(ECommonErrorMessage.FORBIDDEN)
+    throw new Error(ECommonError.FORBIDDEN)
   }
 
   async searchListPermissionNameByRoleId(ids: string[]): Promise<string[]> {
