@@ -1,6 +1,6 @@
+import { ETimeUnit } from '@common/enums'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { Inject, Injectable } from '@nestjs/common'
-import { ETimeUnit } from '@common/enums'
 import { Cache } from 'cache-manager'
 
 @Injectable()
@@ -11,7 +11,7 @@ export class CacheService {
     const data = await this._cacheManager.get<string>(key)
     if (!data) return null
 
-    return isObject ? JSON.parse(data) : data
+    return isObject ? (JSON.parse(data) as T) : (data as unknown as T)
   }
 
   async set<T>(key: string, value: T, ttl: number = ETimeUnit.HOUR_IN_MILLISECONDS) {

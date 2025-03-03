@@ -1,6 +1,9 @@
 # Use an official Node.js runtime as the base image
 FROM node:current
 
+# Install Yarn
+RUN npm install -g yarn
+
 # Set the working directory in the container to /app
 WORKDIR /app
 
@@ -12,6 +15,9 @@ RUN yarn install
 
 # Copy the rest of the application code to the working directory
 COPY . .
+
+# Compile the TypeScript files
+RUN yarn build
 
 # Expose port 3001 for the application
 EXPOSE 3001
