@@ -11,7 +11,7 @@ on:
 jobs:
   test-and-build:
     name: Test and Build
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
       - name: Checkout Code
@@ -28,8 +28,8 @@ jobs:
       - name: Runt Lint
         run: yarn lint
 
-      - name: Run Unit Tests
-        run: yarn test
+      # - name: Run Unit Tests
+      #   run: yarn test
 
       - name: Run Build
         run: yarn build

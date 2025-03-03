@@ -1,7 +1,6 @@
 import { BaseEntity } from '@common/base'
-import { ApiProperty } from '@nestjs/swagger'
-import { Exclude } from 'class-transformer'
 import * as bcrypt from 'bcrypt'
+import { Exclude } from 'class-transformer'
 import { IsEmail, IsNotEmpty } from 'class-validator'
 import { BeforeInsert, BeforeUpdate, Column, Entity, JoinTable, ManyToMany } from 'typeorm'
 import { Role } from './role.entity'
@@ -13,60 +12,42 @@ export class User extends BaseEntity {
     Object.assign(this, partial)
   }
 
-
   @Column({ name: 'EMAIL', unique: true, length: 255 })
   @IsEmail()
   @IsNotEmpty()
   email: string
-
 
   @Column({ name: 'PASSWORD', length: 255 })
   @IsNotEmpty()
   @Exclude()
   password: string
 
-
   @Column({ name: 'IS_PENDING', type: 'boolean', default: true })
   isPending?: boolean
 
-  
   @Column({ name: 'IS_DISABLE', type: 'boolean', default: false })
   isDisable?: boolean
 
-  
   @Column({ name: 'FIRSTNAME', length: 255 })
   firstName: string
 
-  
   @Column({ name: 'LASTNAME', length: 255 })
   lastName: string
 
-  
   @Column({ name: 'GLOBAL_ID', nullable: true })
   globalId?: string
 
-  
   @Column({ name: 'OFFICE_CODE', nullable: true })
   officeCode?: string
 
-  
   @Column({ name: 'COUNTRY', nullable: true })
   country?: string
 
-  @ManyToMany(() => Role, (role) => role.users, {
-    cascade: true,
-    eager: true
-  })
+  @ManyToMany(() => Role, (role) => role.users, { cascade: true, eager: true })
   @JoinTable({
     name: 'user_roles',
-    joinColumn: {
-      name: 'user_id',
-      referencedColumnName: 'id'
-    },
-    inverseJoinColumn: {
-      name: 'role_id',
-      referencedColumnName: 'id'
-    }
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' }
   })
   roles: Role[]
 
